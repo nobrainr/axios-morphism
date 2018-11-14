@@ -69,9 +69,6 @@ describe('Axios Morphism', () => {
     });
   });
   describe('Apply', () => {
-    let client: AxiosInstance;
-    let mock: MockAdapter;
-    const baseURL = 'https://swapi.co/api';
     const mockPeople = {
       name: 'Luke Skywalker',
       height: '172',
@@ -111,114 +108,207 @@ describe('Axios Morphism', () => {
     const planetSchema: StrictSchema<Planet> = { name: 'name', climate: 'climate' };
     const starshipSchema: StrictSchema<Starship> = { name: 'name', model: 'model', length: 'length' };
 
-    beforeEach(() => {
-      client = axios.create();
-      mock = new MockAdapter(client);
+    describe('String Matchers', () => {
+      let client: AxiosInstance;
+      let mock: MockAdapter;
+      const baseURL = 'https://swapi.co/api';
+      beforeEach(() => {
+        client = axios.create();
+        mock = new MockAdapter(client);
 
-      // People API
-      mock.onGet(`${baseURL}/people`).reply(200, { results: [mockPeople] });
-      mock.onGet(`${baseURL}/people/id`).reply(200, mockPeople);
-      mock.onGet(`${baseURL}/people/id/starships/id`).reply(200, mockStarship);
+        // People API
+        mock.onGet(`${baseURL}/people`).reply(200, { results: [mockPeople] });
+        mock.onGet(`${baseURL}/people/id`).reply(200, mockPeople);
+        mock.onGet(`${baseURL}/people/id/starships/id`).reply(200, mockStarship);
 
-      //Planets API
-      mock.onGet(`${baseURL}/planets`).reply(200, { results: [mockPlanet] });
-      mock.onGet(`${baseURL}/planets/id`).reply(200, mockPlanet);
+        //Planets API
+        mock.onGet(`${baseURL}/planets`).reply(200, { results: [mockPlanet] });
+        mock.onGet(`${baseURL}/planets/id`).reply(200, mockPlanet);
 
-      // Starships API
-      mock.onGet(`${baseURL}/starships`).reply(200, { results: [mockStarship] });
-      mock.onGet(`${baseURL}/starships/id`).reply(200, mockStarship);
+        // Starships API
+        mock.onGet(`${baseURL}/starships`).reply(200, { results: [mockStarship] });
+        mock.onGet(`${baseURL}/starships/id`).reply(200, mockStarship);
+      });
+      afterEach(() => {
+        mock.reset();
+      });
+      it('should apply response interceptors on flat urls (e.g /people, /planets) and use dataSelector when present to access axios data', async () => {
+        const config: AxiosMorphismConfiguration = {
+          url: baseURL,
+          interceptors: {
+            requests: [],
+            responses: [
+              { matcher: '/people', schema: peopleSchema, dataSelector: 'results' },
+              { matcher: '/people/:id', schema: peopleSchema },
+              { matcher: '/planets', schema: planetSchema, dataSelector: 'results' }
+            ]
+          }
+        };
+        apply(client, config);
+
+        const planets = await client.get(`${baseURL}/planets`);
+        const people = await client.get(`${baseURL}/people`);
+        expect(planets.data.results).toEqual([expectedPlanet]);
+        expect(people.data.results).toEqual([expectedPeople]);
+      });
+
+      it('should apply response interceptors on nested urls (e.g /people/:id)', async () => {
+        const config: AxiosMorphismConfiguration = {
+          url: baseURL,
+          interceptors: {
+            requests: [],
+            responses: [
+              { matcher: '/people', schema: peopleSchema, dataSelector: 'results' },
+              { matcher: '/people/:id', schema: peopleSchema }
+            ]
+          }
+        };
+        apply(client, config);
+
+        const people = await client.get(`${baseURL}/people`);
+        const aPerson = await client.get(`${baseURL}/people/id`);
+        expect(people.data.results).toEqual([expectedPeople]);
+        expect(aPerson.data).toEqual(expectedPeople);
+      });
+
+      it('should apply response interceptors on deeply nested urls (e.g /people/:id/starships/:id)', async () => {
+        const config: AxiosMorphismConfiguration = {
+          url: baseURL,
+          interceptors: {
+            requests: [],
+            responses: [
+              { matcher: '/people/:id', schema: peopleSchema },
+              { matcher: '/people/:id/starships/:id', schema: starshipSchema }
+            ]
+          }
+        };
+        apply(client, config);
+
+        const aPerson = await client.get(`${baseURL}/people/id`);
+        const aStarship = await client.get(`${baseURL}/people/id/starships/id`);
+
+        expect(aPerson.data).toEqual(expectedPeople);
+        expect(aStarship.data).toEqual(expectedStarship);
+      });
+
+      it('should apply response interceptors on combined morphisms', async () => {
+        const peopleMorphism: AxiosMorphismConfiguration = {
+          url: '/people',
+          interceptors: {
+            requests: [],
+            responses: [
+              { matcher: '/', schema: peopleSchema, dataSelector: 'results' },
+              { matcher: '/:id', schema: peopleSchema }
+            ]
+          }
+        };
+        const planetMorphism: AxiosMorphismConfiguration = {
+          url: '/planets',
+          interceptors: {
+            requests: [],
+            responses: [
+              { matcher: '/', schema: planetSchema, dataSelector: 'results' },
+              { matcher: '/:id', schema: planetSchema }
+            ]
+          }
+        };
+        apply(client, combine(baseURL, peopleMorphism, planetMorphism));
+
+        const aPerson = await client.get(`${baseURL}/people/id`);
+        const aPlanet = await client.get(`${baseURL}/planets/id`);
+
+        expect(aPerson.data).toEqual(expectedPeople);
+        expect(aPlanet.data).toEqual(expectedPlanet);
+      });
     });
-    afterEach(() => {
-      mock.reset();
-    });
 
-    it('should apply response interceptors on flat urls (e.g /people, /planets) and use dataSelector when present to access axios data', async () => {
-      const config: AxiosMorphismConfiguration = {
-        url: baseURL,
-        interceptors: {
-          requests: [],
-          responses: [
-            { matcher: '/people', schema: peopleSchema, dataSelector: 'results' },
-            { matcher: '/people/:id', schema: peopleSchema },
-            { matcher: '/planets', schema: planetSchema, dataSelector: 'results' }
-          ]
-        }
-      };
-      apply(client, config);
+    describe('Function Matchers', () => {
+      let client: AxiosInstance;
+      let mock: MockAdapter;
+      const baseURL = 'https://graphql.com/api';
+      beforeEach(() => {
+        client = axios.create();
+        mock = new MockAdapter(client);
 
-      const planets = await client.get(`${baseURL}/planets`);
-      const people = await client.get(`${baseURL}/people`);
-      expect(planets.data.results).toEqual([expectedPlanet]);
-      expect(people.data.results).toEqual([expectedPeople]);
-    });
+        // Simulate GraphQL API Behaviour
+        mock.onPost(`${baseURL}`).reply(config => {
+          const data = JSON.parse(config.data);
+          switch (data.Operation) {
+            case 'people': {
+              return [200, { Operation: 'people', data: mockPeople }];
+            }
+            case 'planets': {
+              return [200, { Operation: 'planets', data: mockPlanet }];
+            }
+          }
+        });
+      });
+      afterEach(() => {
+        mock.reset();
+      });
+      it('should apply interceptors on function matcher', async () => {
+        const axiosMorphism: AxiosMorphismConfiguration = {
+          url: '/',
+          interceptors: {
+            requests: [],
+            responses: [
+              {
+                matcher: response => response.data.Operation === 'people',
+                schema: peopleSchema,
+                dataSelector: 'data'
+              },
+              {
+                matcher: response => response.data.Operation === 'planets',
+                schema: planetSchema,
+                dataSelector: 'data'
+              }
+            ]
+          }
+        };
 
-    it('should apply response interceptors on nested urls (e.g /people/:id)', async () => {
-      const config: AxiosMorphismConfiguration = {
-        url: baseURL,
-        interceptors: {
-          requests: [],
-          responses: [
-            { matcher: '/people', schema: peopleSchema, dataSelector: 'results' },
-            { matcher: '/people/:id', schema: peopleSchema }
-          ]
-        }
-      };
-      apply(client, config);
+        apply(client, axiosMorphism);
 
-      const people = await client.get(`${baseURL}/people`);
-      const aPerson = await client.get(`${baseURL}/people/id`);
-      expect(people.data.results).toEqual([expectedPeople]);
-      expect(aPerson.data).toEqual(expectedPeople);
-    });
+        const aPerson = await client.post(`${baseURL}`, { Operation: 'people' });
+        expect(aPerson.data.data).toEqual(expectedPeople);
+        const aPlanet = await client.post(`${baseURL}`, { Operation: 'planets' });
+        expect(aPlanet.data.data).toEqual(expectedPlanet);
+      });
+      it('should apply interceptors on combined function matcher', async () => {
+        const peopleMorphism: AxiosMorphismConfiguration = {
+          url: '/',
+          interceptors: {
+            requests: [],
+            responses: [
+              {
+                matcher: response => response.data.Operation === 'people',
+                schema: peopleSchema,
+                dataSelector: 'data'
+              }
+            ]
+          }
+        };
 
-    it('should apply response interceptors on deeply nested urls (e.g /people/:id/starships/:id)', async () => {
-      const config: AxiosMorphismConfiguration = {
-        url: baseURL,
-        interceptors: {
-          requests: [],
-          responses: [
-            { matcher: '/people/:id', schema: peopleSchema },
-            { matcher: '/people/:id/starships/:id', schema: starshipSchema }
-          ]
-        }
-      };
-      apply(client, config);
+        const planetMorphism: AxiosMorphismConfiguration = {
+          url: '/',
+          interceptors: {
+            requests: [],
+            responses: [
+              {
+                matcher: response => response.data.Operation === 'planets',
+                schema: planetSchema,
+                dataSelector: 'data'
+              }
+            ]
+          }
+        };
 
-      const aPerson = await client.get(`${baseURL}/people/id`);
-      const aStarship = await client.get(`${baseURL}/people/id/starships/id`);
+        apply(client, combine(baseURL, peopleMorphism, planetMorphism));
 
-      expect(aPerson.data).toEqual(expectedPeople);
-      expect(aStarship.data).toEqual(expectedStarship);
-    });
-
-    it('should apply response interceptors on combined morphisms', async () => {
-      const peopleMorphism: AxiosMorphismConfiguration = {
-        url: '/people',
-        interceptors: {
-          requests: [],
-          responses: [
-            { matcher: '/', schema: peopleSchema, dataSelector: 'results' },
-            { matcher: '/:id', schema: peopleSchema }
-          ]
-        }
-      };
-      const planetMorphism: AxiosMorphismConfiguration = {
-        url: '/planets',
-        interceptors: {
-          requests: [],
-          responses: [
-            { matcher: '/', schema: planetSchema, dataSelector: 'results' },
-            { matcher: '/:id', schema: planetSchema }
-          ]
-        }
-      };
-      apply(client, combine(baseURL, peopleMorphism, planetMorphism));
-
-      const aPerson = await client.get(`${baseURL}/people/id`);
-      const aPlanet = await client.get(`${baseURL}/planets/id`);
-
-      expect(aPerson.data).toEqual(expectedPeople);
-      expect(aPlanet.data).toEqual(expectedPlanet);
+        const aPerson = await client.post(`${baseURL}`, { Operation: 'people' });
+        expect(aPerson.data.data).toEqual(expectedPeople);
+        const aPlanet = await client.post(`${baseURL}`, { Operation: 'planets' });
+        expect(aPlanet.data.data).toEqual(expectedPlanet);
+      });
     });
   });
 });
