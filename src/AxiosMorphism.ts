@@ -72,11 +72,18 @@ function createResponseInterceptor(baseUrl: string, matcherConfiguration: Respon
       return response;
     }
     if (matcherConfiguration.matcher instanceof RegExp) {
-      console.log('RegExp Matcher');
+      const url = response.config.url;
 
-      // return (response: AxiosResponse) => {
-      //   return response;
-      // };
+      if (matcherConfiguration.matcher.test(url)) {
+        const { schema, dataSelector } = matcherConfiguration;
+        if (dataSelector) {
+          const data = response.data[matcherConfiguration.dataSelector];
+          response.data[matcherConfiguration.dataSelector] = morphism(schema, data);
+        } else {
+          response.data = morphism(schema, response.data);
+        }
+      }
+      return response;
     }
   };
 }

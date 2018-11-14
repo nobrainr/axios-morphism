@@ -310,5 +310,49 @@ describe('Axios Morphism', () => {
         expect(aPlanet.data.data).toEqual(expectedPlanet);
       });
     });
+
+    describe('RegExp Matchers', () => {
+      let client: AxiosInstance;
+      let mock: MockAdapter;
+      const baseURL = 'https://swapi.co/api';
+      beforeEach(() => {
+        client = axios.create();
+        mock = new MockAdapter(client);
+
+        // People API
+        mock.onGet(`${baseURL}/people`).reply(200, mockPeople);
+
+        //Planets API
+        mock.onGet(`${baseURL}/planets`).reply(200, mockPlanet);
+      });
+      afterEach(() => {
+        mock.reset();
+      });
+      it('should apply interceptors on RegExp Matcher', async () => {
+        const axiosMorphism: AxiosMorphismConfiguration = {
+          url: '/',
+          interceptors: {
+            requests: [],
+            responses: [
+              {
+                matcher: /people$/,
+                schema: peopleSchema
+              },
+              {
+                matcher: /planets$/,
+                schema: planetSchema
+              }
+            ]
+          }
+        };
+
+        apply(client, axiosMorphism);
+
+        const aPerson = await client.get(`${baseURL}/people`);
+        expect(aPerson.data).toEqual(expectedPeople);
+        const aPlanet = await client.get(`${baseURL}/planets`);
+        expect(aPlanet.data).toEqual(expectedPlanet);
+      });
+    });
   });
 });
