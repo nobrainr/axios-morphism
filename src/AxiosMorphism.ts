@@ -41,11 +41,10 @@ export function combine(baseURL: string, ...configurations: AxiosMorphismConfigu
 }
 
 function createResponseInterceptor(baseUrl: string, matcherConfiguration: ResponseMatcher) {
-  if (typeof matcherConfiguration.matcher === 'string') {
-    const finalPath = urljoin(baseUrl, <string>matcherConfiguration.matcher);
-    const regExp = pathToRegexp(finalPath);
-
-    return (response: AxiosResponse) => {
+  return (response: AxiosResponse) => {
+    if (typeof matcherConfiguration.matcher === 'string') {
+      const finalPath = urljoin(baseUrl, <string>matcherConfiguration.matcher);
+      const regExp = pathToRegexp(finalPath);
       const url = response.config.url;
 
       if (regExp.test(url)) {
@@ -58,22 +57,28 @@ function createResponseInterceptor(baseUrl: string, matcherConfiguration: Respon
         }
       }
       return response;
-    };
-  }
-  if (matcherConfiguration.matcher instanceof Function) {
-    console.log('Function Matcher');
-
-    return (response: AxiosResponse) => {
+    }
+    if (matcherConfiguration.matcher instanceof Function) {
+      const hasMatched = matcherConfiguration.matcher(response);
+      if (hasMatched) {
+        const { schema, dataSelector } = matcherConfiguration;
+        if (dataSelector) {
+          const data = response.data[matcherConfiguration.dataSelector];
+          response.data[matcherConfiguration.dataSelector] = morphism(schema, data);
+        } else {
+          response.data = morphism(schema, response.data);
+        }
+      }
       return response;
-    };
-  }
-  if (matcherConfiguration.matcher instanceof RegExp) {
-    console.log('RegExp Matcher');
+    }
+    if (matcherConfiguration.matcher instanceof RegExp) {
+      console.log('RegExp Matcher');
 
-    return (response: AxiosResponse) => {
-      return response;
-    };
-  }
+      // return (response: AxiosResponse) => {
+      //   return response;
+      // };
+    }
+  };
 }
 
 function createInterceptors(configuration: AxiosMorphismConfiguration) {
