@@ -1,6 +1,12 @@
 {
   "author": "Yann renaudin",
   "description": "",
+  "version": "0.0.1",
+  "dependencies": {
+    "morphism": "^1.6.1",
+    "path-to-regexp": "^2.4.0",
+    "url-join": "^4.0.0"
+  },
   "peerDependencies": {
     "axios": "*"
   },
@@ -23,13 +29,14 @@
     "karma": "^3.0.0",
     "karma-chrome-launcher": "^2.2.0",
     "karma-coverage-istanbul-reporter": "^2.0.1",
-    "karma-jasmine": "^1.1.0",
+    "karma-jasmine": "^2.0.0",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-spec-reporter": "0.0.32",
     "karma-webpack": "^3.0.0",
     "rimraf": "^2.6.1",
+    "semantic-release": "^15.12.0",
     "source-map-loader": "^0.2.1",
-    "style-loader": "^0.22.1",
+    "style-loader": "^0.23.1",
     "tslint": "^5.5.0",
     "tslint-loader": "^3.5.3",
     "typescript": "^3.0.1",
@@ -49,12 +56,7 @@
     "server:dev": "webpack-dev-server --mode development --config ./webpack.config.js --hot --inline --progress --watch --open",
     "server:prod": "cross-env NODE_ENV=production webpack-dev-server  --mode production --config ./webpack.config.js --port 3000 --host 0.0.0.0 --hot --inline --progress  --watch --open --content-base dist/",
     "start": "npm run server:dev",
-    "test": "karma start"
-  },
-  "version": "0.0.1",
-  "dependencies": {
-    "morphism": "^1.6.1",
-    "path-to-regexp": "^2.4.0",
-    "url-join": "^4.0.0"
+    "test": "karma start",
+    "semantic-release": "semantic-release"
   }
 }
