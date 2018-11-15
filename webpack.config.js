@@ -1,6 +1,5 @@
 const webpack = require('webpack');
 const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const nodeEnv = process.env.NODE_ENV || 'development';
 const isProd = nodeEnv === 'production';
 
@@ -9,10 +8,6 @@ const plugins = [
     'process.env': {
       NODE_ENV: JSON.stringify(nodeEnv)
     }
-  }),
-  new HtmlWebpackPlugin({
-    title: 'Typescript Webpack Starter',
-    template: '!!ejs-loader!src/index.html'
   }),
   new webpack.LoaderOptionsPlugin({
     options: {
@@ -28,11 +23,11 @@ var config = {
   devtool: isProd ? 'hidden-source-map' : 'source-map',
   context: path.resolve('./src'),
   entry: {
-    app: './index.ts'
+    app: './axios-morphism.ts'
   },
   output: {
     path: path.resolve('./dist'),
-    filename: '[name].bundle.js'
+    filename: 'axios-morphism.js'
   },
   module: {
     rules: [
@@ -51,9 +46,7 @@ var config = {
               esModules: true
             }
           }
-        : null,
-      { test: /\.html$/, loader: 'html-loader' },
-      { test: /\.css$/, loaders: ['style-loader', 'css-loader'] }
+        : null
     ].filter(Boolean)
   },
   resolve: {
