@@ -160,6 +160,7 @@ describe('Axios Morphism', () => {
         await client.post(`${baseURL}/people/id`, mockPeople);
         expect(onPostSpy).toHaveBeenCalledWith(expectedPerson);
       });
+
       it('should apply response interceptors on flat urls (e.g /people, /planets) and use dataSelector when present to access axios data', async () => {
         const config: AxiosMorphismConfiguration = {
           url: baseURL,
@@ -279,7 +280,7 @@ describe('Axios Morphism', () => {
       afterEach(() => {
         mock.reset();
       });
-      it('should apply interceptors on function matcher', async () => {
+      it('should apply response interceptors on function matcher', async () => {
         const axiosMorphism: AxiosMorphismConfiguration = {
           url: '/',
           interceptors: {
@@ -305,6 +306,32 @@ describe('Axios Morphism', () => {
         expect(aPerson.data.data).toEqual(expectedPeople);
         const aPlanet = await client.post(`${baseURL}`, { Operation: 'planets' });
         expect(aPlanet.data.data).toEqual(expectedPlanet);
+      });
+      it('should apply request interceptors on function matcher', async () => {
+        const onPostSpy = jasmine.createSpy(`Post on ${baseURL}/people/id}`);
+        mock.onPost(`${baseURL}/people/id`).reply(config => {
+          onPostSpy(JSON.parse(config.data));
+          return [200];
+        });
+        // Config
+        const expectedPerson = {
+          name: mockPeople.name
+        };
+        const peopleToApiSchema = {
+          name: 'name'
+        };
+
+        const config: AxiosMorphismConfiguration = {
+          url: baseURL,
+          interceptors: {
+            requests: [{ matcher: request => request.data === mockPeople, schema: peopleToApiSchema }],
+            responses: []
+          }
+        };
+        apply(client, config);
+
+        await client.post(`${baseURL}/people/id`, mockPeople);
+        expect(onPostSpy).toHaveBeenCalledWith(expectedPerson);
       });
       it('should apply interceptors on combined function matcher', async () => {
         const peopleMorphism: AxiosMorphismConfiguration = {
@@ -361,7 +388,7 @@ describe('Axios Morphism', () => {
       afterEach(() => {
         mock.reset();
       });
-      it('should apply interceptors on RegExp Matcher', async () => {
+      it('should apply response interceptors on regexp matcher', async () => {
         const axiosMorphism: AxiosMorphismConfiguration = {
           url: '/',
           interceptors: {
@@ -385,6 +412,34 @@ describe('Axios Morphism', () => {
         expect(aPerson.data).toEqual(expectedPeople);
         const aPlanet = await client.get(`${baseURL}/planets`);
         expect(aPlanet.data).toEqual(expectedPlanet);
+      });
+
+      it('should apply request interceptors on regexp matcher', async () => {
+        // Mock
+        const onPostSpy = jasmine.createSpy(`Post on ${baseURL}/people/id}`);
+        mock.onPost(`${baseURL}/people/id`).reply(config => {
+          onPostSpy(JSON.parse(config.data));
+          return [200];
+        });
+        // Config
+        const expectedPerson = {
+          name: mockPeople.name
+        };
+        const peopleToApiSchema = {
+          name: 'name'
+        };
+
+        const config: AxiosMorphismConfiguration = {
+          url: baseURL,
+          interceptors: {
+            requests: [{ matcher: /people\/id$/, schema: peopleToApiSchema }],
+            responses: []
+          }
+        };
+        apply(client, config);
+
+        await client.post(`${baseURL}/people/id`, mockPeople);
+        expect(onPostSpy).toHaveBeenCalledWith(expectedPerson);
       });
     });
   });
