@@ -27,7 +27,9 @@ var config = {
   },
   output: {
     path: path.resolve('./dist'),
-    filename: 'axios-morphism.js'
+    filename: 'axios-morphism.js',
+    library: 'axios-morphism',
+    libraryTarget: 'commonjs-module'
   },
   module: {
     rules: [
