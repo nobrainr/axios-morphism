@@ -6,7 +6,7 @@
     "type": "git",
     "url": "git+https://github.com/nobrainr/axios-morphism.git"
   },
-  "version": "1.0.8",
+  "version": "1.0.7",
   "main": "./dist/axios-morphism.js",
   "types": "./dist/axios-morphism.d.ts",
   "files": [
@@ -33,6 +33,7 @@
     "axios": "^0.4.2"
   },
   "devDependencies": {
+    "@semantic-release/git": "^7.0.5",
     "@types/jasmine": "^2.5.53",
     "@types/node": "^10.12.6",
     "@types/url-join": "^0.8.2",

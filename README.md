@@ -75,6 +75,9 @@ await client.get('/people');
 // ]
 ```
 
+▶ [Try on Repl.it](https://repl.it/@yrnd1/axios-morphism-simple)
+
+
 ## Usage
 
 ### Schema

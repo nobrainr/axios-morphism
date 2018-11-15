@@ -1,0 +1,11 @@
+{
+  "plugins": [
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["package.json"],
+        "message": "chore(release): Update package.json version to ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ]
+  ]
+}
