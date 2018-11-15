@@ -161,16 +161,24 @@ function createInterceptors(configuration: AxiosMorphismConfiguration) {
 }
 
 export function apply(client: AxiosInstance, ...configurations: AxiosMorphismConfiguration[]) {
-  configurations.forEach(configuration => {
+  const subscriptions = configurations.map(configuration => {
     const { responses, requests } = createInterceptors(configuration);
-    responses.forEach(interceptor => {
-      client.interceptors.response.use(interceptor);
-    });
-    requests.forEach(interceptor => {
-      client.interceptors.request.use(interceptor);
-    });
+    const responseIds = responses.map(interceptor => client.interceptors.response.use(interceptor));
+    const requestIds = requests.map(interceptor => client.interceptors.request.use(interceptor));
+    return { responsesSubscriptions: responseIds, requestsSubscriptions: requestIds };
   });
-  return client;
+  return {
+    unsubscribe: () => {
+      subscriptions.forEach(subscription => {
+        subscription.responsesSubscriptions.forEach(id => {
+          client.interceptors.response.eject(id);
+        });
+        subscription.requestsSubscriptions.forEach(id => {
+          client.interceptors.request.eject(id);
+        });
+      });
+    }
+  };
 }
 
 export function combine(baseURL: string, ...configurations: AxiosMorphismConfiguration[]) {

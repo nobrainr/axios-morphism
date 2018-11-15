@@ -442,5 +442,35 @@ describe('Axios Morphism', () => {
         expect(onPostSpy).toHaveBeenCalledWith(expectedPerson);
       });
     });
+
+    describe('Unsubscribe Interceptors', () => {
+      let client: AxiosInstance;
+      let mock: MockAdapter;
+      const baseURL = 'https://swapi.co/api';
+      beforeEach(() => {
+        client = axios.create();
+        mock = new MockAdapter(client);
+
+        // People API
+        mock.onGet(`${baseURL}/people`).reply(200, { results: [mockPeople] });
+      });
+      afterEach(() => {
+        mock.reset();
+      });
+
+      it('should unsubscribe registered interceptors', async () => {
+        const config: AxiosMorphismConfiguration = {
+          url: baseURL,
+          interceptors: {
+            requests: [],
+            responses: [{ matcher: '/people', schema: peopleSchema, dataSelector: 'results' }]
+          }
+        };
+        const axiosMorphism = apply(client, config);
+        axiosMorphism.unsubscribe();
+        const people = await client.get(`${baseURL}/people`);
+        expect(people.data.results).toEqual([mockPeople]);
+      });
+    });
   });
 });

@@ -1,7 +1,12 @@
 {
   "name": "axios-morphism",
-  "description": "",
-  "version": "1.0.0",
+  "description": "An Axios plugin to transform requests and response data on-the-fly based on a schema.",
+  "homepage": "https://github.com/nobrainr/axios-morphism",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nobrainr/axios-morphism.git"
+  },
+  "version": "1.0.5",
   "main": "./dist/axios-morphism.js",
   "types": "./dist/axios-morphism.d.ts",
   "files": [
