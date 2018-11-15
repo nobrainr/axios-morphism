@@ -12,6 +12,7 @@ npm install --save axios-morphism
 ### Example
 
 ```typescript
+import axios from "axios";
 import { apply, AxiosMorphismConfiguration } from './axios-morphism';
 
 const peopleSchema = {
@@ -23,7 +24,8 @@ const peopleSchema = {
 const configuration: AxiosMorphismConfiguration = {
   url: 'https://swapi.co/api/',
   interceptors: {
-    responses: [{ matcher: '/people/:id', schema: peopleSchema }]
+    responses: [{ matcher: '/people/:id', schema: peopleSchema }],
+    requests: []
   }
 };
 
@@ -33,7 +35,9 @@ apply(client, configuration);
 await client.get('/people/1');
 ▶
 // {
-//   name: 'Luke Skywalker'
+//   name: "Luke Skywalker"
+//   height: "172"
+//   weight: "77"
 // }
 ```
 

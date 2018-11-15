@@ -25,7 +25,7 @@
     "url-join": "^4.0.0"
   },
   "peerDependencies": {
-    "axios": "*"
+    "axios": "^0.4.2"
   },
   "devDependencies": {
     "@types/jasmine": "^2.5.53",
