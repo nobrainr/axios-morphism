@@ -103,10 +103,10 @@ const configuration: AxiosMorphismConfiguration = {
       { matcher: '/people', schema: peopleSchema, dataSelector: 'results' },
       { matcher: /\/people\/([^\/]+?)(?:\/)?$/i, schema: peopleSchema }, // matches /people/:id
       {
-        matcher: (response: AxiosResponse) => response.config.method === 'POST',
+        matcher: (response: AxiosResponse) => response.config.method === 'POST',  // matches every responses obtained using a POST
         schema: peopleSchema,
         dataSelector: 'results'
-      } // matches every responses obtained using a POST
+      }
     ],
     requests: []
   }
