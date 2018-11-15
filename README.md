@@ -1,8 +1,9 @@
 # axios-morphism
+[![npm](https://img.shields.io/npm/v/axios-morphism.svg?style=for-the-badge)](https://www.npmjs.com/package/axios-morphism) [![npm bundle size (minified)](https://img.shields.io/bundlephobia/min/axios-morphism.svg?style=for-the-badge)](https://github.com/nobrainr/axios-morphism) [![Coveralls github](https://img.shields.io/coveralls/github/nobrainr/axios-morphism.svg?style=for-the-badge)](https://coveralls.io/github/nobrainr/axios-morphism?branch=master) [![CircleCI (all branches)](https://img.shields.io/circleci/project/github/nobrainr/axios-morphism/master.svg?style=for-the-badge)](https://circleci.com/gh/nobrainr/axios-morphism) [![Deps](https://img.shields.io/david/nobrainr/axios-morphism.svg?style=for-the-badge)](https://www.npmjs.com/package/axios-morphism)
 
 > An Axios plugin to transform requests and response data on-the-fly based on a schema.
 
-This package is built upon [`Morphism`](https://www.npmjs.com/package/morphism). Access the documentation [here](https://github.com/nobrainr/morphism).
+This package is built upon [`Morphism`](https://www.npmjs.com/package/morphism). Read the documentation [here](https://github.com/nobrainr/morphism).
 
 ---
 
@@ -120,9 +121,9 @@ const configuration: AxiosMorphismConfiguration = {
 | -------------------------------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | url                                                                        | `string`                          | Base URL to listen on                                                               | `https://swapi.co/api`                                                                                           |
 | interceptors                                                               | `{ responses: [], requests: []};` | List of Responses and Requests Interceptors Configuration to register against Axios |
-| interceptors.responses[].matcher                                           | `string | RegExp | Function`      | Matcher used to detect on which response to apply the transformer                   | - `'people/:id'` <br> - `/people$/i` <br> - `(response: AxiosResponse) => response.config.method === 'POST'`     |
-| interceptors.requests[].matcher                                            | `string | RegExp | Function`      | Matcher used to detect on which request to apply the transformer                    | - `'planets/:id'` <br> - `/planets$/i` <br> - `(request: AxiosRequestConfig) => request.url.includes('planets')` |
-| interceptors.requests[].schema interceptors.responses[].schema             | `Schema | StrictSchema`           | A schema is an object-preserving map from one data structure to another.            | [Morphism Schema Examples](https://github.com/nobrainr/morphism#schema-example)                                  |
+| interceptors.responses[].matcher                                           | `string` `RegExp` `Function`      | Matcher used to detect on which response to apply the transformer                   | - `'people/:id'` <br> - `/people$/i` <br> - `(response: AxiosResponse) => response.config.method === 'POST'`     |
+| interceptors.requests[].matcher                                            | `string` `RegExp` `Function`      | Matcher used to detect on which request to apply the transformer                    | - `'planets/:id'` <br> - `/planets$/i` <br> - `(request: AxiosRequestConfig) => request.url.includes('planets')` |
+| interceptors.requests[].schema interceptors.responses[].schema             | `Schema` `StrictSchema`           | A schema is an object-preserving map from one data structure to another.            | [Morphism Schema Examples](https://github.com/nobrainr/morphism#schema-example)                                  |
 | interceptors.requests[].dataSelector interceptors.responses[].dataSelector | `string`                          | A selector to access the data in the Axios returned data                            | With this Axios Response: `{ data: { results: [] }}`. Pick the data with `{ dataSelector: 'results' }`           |
 
 
