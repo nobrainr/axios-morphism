@@ -13,7 +13,7 @@ npm install --save axios-morphism
 
 ```typescript
 import axios from "axios";
-import { apply, AxiosMorphismConfiguration } from './axios-morphism';
+import { apply, AxiosMorphismConfiguration } from 'axios-morphism';
 
 const peopleSchema = {
   name: 'name',
