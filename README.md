@@ -16,6 +16,7 @@ This package is built upon [`Morphism`](https://www.npmjs.com/package/morphism).
       - [Example:](#example)
       - [Axios-Morphism Configuration](#axios-morphism-configuration)
     - [Apply Configurations](#apply-configurations)
+    - [Remove Configurations](#remove-configurations)
     - [Combine Configurations](#combine-configurations)
   - [License](#license)
 
@@ -150,6 +151,16 @@ apply(client, configuration);
 // Start making requests to see you data transformed
 await client.get('/people');
 await client.get('/people/1');
+```
+
+### Remove Configurations
+Use the `unsubscribe` method returned from the `apply` function to opt-out from the interceptors
+
+```typescript
+const configuration: AxiosMorphismConfiguration = {...};
+
+const axiosMorphism = apply(client, config);
+axiosMorphism.unsubscribe(); // Remove all registered interceptors
 ```
 
 ### Combine Configurations
