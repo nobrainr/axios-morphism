@@ -5,9 +5,8 @@
 ### Installation
 
 ```sh
-
+npm install --save axios
 npm install --save axios-morphism
-
 ```
 
 ### Example
@@ -15,22 +14,26 @@ npm install --save axios-morphism
 ```typescript
 import { apply, AxiosMorphismConfiguration } from './axios-morphism';
 
-const peopleSchema = { name: 'name', firstName: 'firstName' };
+const peopleSchema = {
+  name: 'name',
+  height: 'height',
+  weight: 'mass'
+};
 
 const configuration: AxiosMorphismConfiguration = {
-  url: 'https://api.com',
+  url: 'https://swapi.co/api/',
   interceptors: {
     responses: [{ matcher: '/people/:id', schema: peopleSchema }]
   }
 };
 
+const client = axios.create({baseURL: 'https://swapi.co/api/'});
 apply(client, configuration);
-await client.get(`https://api.com/people/1`);
 
+await client.get('/people/1');
 ▶
 // {
-//   name: 'Smith',
-//   firstName: 'John'
+//   name: 'Luke Skywalker'
 // }
 ```
 
