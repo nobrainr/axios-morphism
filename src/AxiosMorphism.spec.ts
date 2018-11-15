@@ -226,7 +226,8 @@ describe('Axios Morphism', () => {
             requests: [],
             responses: [
               { matcher: '/', schema: peopleSchema, dataSelector: 'results' },
-              { matcher: '/:id', schema: peopleSchema }
+              { matcher: '/:id', schema: peopleSchema },
+              { matcher: /starships/, schema: starshipSchema }
             ]
           }
         };
@@ -244,9 +245,11 @@ describe('Axios Morphism', () => {
 
         const aPerson = await client.get(`${baseURL}/people/id`);
         const aPlanet = await client.get(`${baseURL}/planets/id`);
+        const aStarship = await client.get(`${baseURL}/people/id/starships/id`);
 
         expect(aPerson.data).toEqual(expectedPeople);
         expect(aPlanet.data).toEqual(expectedPlanet);
+        expect(aStarship.data).toEqual(expectedStarship);
       });
     });
 

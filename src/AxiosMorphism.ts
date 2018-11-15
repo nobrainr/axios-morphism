@@ -3,15 +3,15 @@ import { AxiosResponse, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as urljoin from 'url-join';
 import * as pathToRegexp from 'path-to-regexp';
 
-type ResponseMatcherFunction = (response: AxiosResponse) => boolean;
-type RequestMatcherFunction = (request: AxiosRequestConfig) => boolean;
+type ResponseFunctionMatcher = (response: AxiosResponse) => boolean;
+type RequestFunctionMatcher = (request: AxiosRequestConfig) => boolean;
 
 enum TransformerType {
   Reponse,
   Request
 }
-type MatcherFunction<T> = T extends TransformerType.Reponse ? ResponseMatcherFunction : RequestMatcherFunction;
-type Matcher<T = any> = string | RegExp | MatcherFunction<T>;
+type FunctionMatcher<T = any> = T extends TransformerType.Reponse ? ResponseFunctionMatcher : RequestFunctionMatcher;
+type Matcher<T = any> = string | RegExp | FunctionMatcher<T>;
 interface TransformerConfiguration<T extends TransformerType> {
   matcher: Matcher<T>;
   schema: Schema<any> | StrictSchema<any>;
@@ -35,11 +35,17 @@ export function combine(baseURL: string, ...configurations: AxiosMorphismConfigu
       .filter(c => isStringMatcher(c.matcher))
       .map(config => ({ ...config, matcher: urljoin(configuration.url, (<string>config.matcher).replace(/\/$/, '')) }));
 
-    const configurationsMatcherFunction = configuration.interceptors.responses.filter(
-      c => c.matcher instanceof Function
+    const configurationsMatcherFunction = configuration.interceptors.responses.filter(c =>
+      isFunctionMatcher(c.matcher)
     );
 
-    rootConfiguration.interceptors.responses.push(...configurationsMatcherFunction, ...configurationsMatcherString);
+    const configurationsRegExpMatcher = configuration.interceptors.responses.filter(c => isRegExpMatcher(c.matcher));
+
+    rootConfiguration.interceptors.responses.push(
+      ...configurationsMatcherFunction,
+      ...configurationsMatcherString,
+      ...configurationsRegExpMatcher
+    );
     return rootConfiguration;
   }, initialValue);
 }
@@ -171,7 +177,7 @@ export function apply(client: AxiosInstance, ...configurations: AxiosMorphismCon
 
 // Helpers
 
-function isFunctionMatcher(matcher: Matcher): matcher is ResponseMatcherFunction | RequestMatcherFunction {
+function isFunctionMatcher(matcher: Matcher): matcher is ResponseFunctionMatcher | RequestFunctionMatcher {
   return matcher instanceof Function;
 }
 function isRegExpMatcher(matcher: Matcher): matcher is RegExp {
