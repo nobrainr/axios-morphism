@@ -1,4 +1,4 @@
-import { combine, AxiosMorphismConfiguration, apply } from './AxiosMorphism';
+import { combine, AxiosMorphismConfiguration, apply } from './axios-morphism';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import { StrictSchema } from 'morphism';
