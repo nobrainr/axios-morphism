@@ -194,3 +194,5 @@ export function combine(baseURL: string, ...configurations: AxiosMorphismConfigu
     return rootConfiguration;
   }, initialValue);
 }
+
+export default { apply, combine };
