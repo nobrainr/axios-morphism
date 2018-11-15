@@ -28,26 +28,38 @@ export interface AxiosMorphismConfiguration {
   };
 }
 
-export function combine(baseURL: string, ...configurations: AxiosMorphismConfiguration[]) {
-  const initialValue: AxiosMorphismConfiguration = { url: baseURL, interceptors: { requests: [], responses: [] } };
-  return configurations.reduce((rootConfiguration, configuration) => {
-    const configurationsMatcherString = configuration.interceptors.responses
-      .filter(c => isStringMatcher(c.matcher))
-      .map(config => ({ ...config, matcher: urljoin(configuration.url, (<string>config.matcher).replace(/\/$/, '')) }));
+// Helpers
+function isFunctionMatcher(matcher: Matcher): matcher is ResponseFunctionMatcher | RequestFunctionMatcher {
+  return matcher instanceof Function;
+}
+function isRegExpMatcher(matcher: Matcher): matcher is RegExp {
+  return matcher instanceof RegExp;
+}
+function isStringMatcher(matcher: Matcher): matcher is string {
+  return typeof matcher === 'string';
+}
 
-    const configurationsMatcherFunction = configuration.interceptors.responses.filter(c =>
-      isFunctionMatcher(c.matcher)
-    );
+enum AxiosType {
+  AxiosResponse = 'AxiosReponse',
+  AxiosRequest = 'AxiosRequest'
+}
+function isAxiosResponse(requestOrResponse: AxiosRequestConfig | AxiosResponse): requestOrResponse is AxiosResponse {
+  return requestOrResponse[axiosTypeSymbol] === AxiosType.AxiosResponse;
+}
 
-    const configurationsRegExpMatcher = configuration.interceptors.responses.filter(c => isRegExpMatcher(c.matcher));
+const axiosTypeSymbol = Symbol('AxiosType');
+function createAxiosResponseCallback(callback: (response: AxiosResponse) => AxiosResponse) {
+  return (response: AxiosResponse) => {
+    response[axiosTypeSymbol] = AxiosType.AxiosResponse;
+    return callback(response);
+  };
+}
 
-    rootConfiguration.interceptors.responses.push(
-      ...configurationsMatcherFunction,
-      ...configurationsMatcherString,
-      ...configurationsRegExpMatcher
-    );
-    return rootConfiguration;
-  }, initialValue);
+function createAxiosRequestCallback(callback: (request: AxiosRequestConfig) => AxiosRequestConfig) {
+  return (request: AxiosRequestConfig) => {
+    request[axiosTypeSymbol] = AxiosType.AxiosRequest;
+    return callback(request);
+  };
 }
 
 function applyMorphism(transformerConfiguration: InterceptorConfiguration, axiosInput: any) {
@@ -61,77 +73,63 @@ function applyMorphism(transformerConfiguration: InterceptorConfiguration, axios
   return axiosInput;
 }
 
-function createAxiosResponseCallback(callback: (response: AxiosResponse) => AxiosResponse) {
-  return (response: AxiosResponse) => callback(response);
+function applyFunctionMatcher(
+  transformerConfiguration: InterceptorConfiguration,
+  responseOrRequest: AxiosRequestConfig | AxiosResponse
+) {
+  const hasMatched = (<any>transformerConfiguration.matcher)(responseOrRequest);
+  if (hasMatched) {
+    return applyMorphism(transformerConfiguration, responseOrRequest);
+  }
+  return responseOrRequest;
+}
+function applyRegExpMatcher(
+  transformerConfiguration: InterceptorConfiguration,
+  responseOrRequest: AxiosRequestConfig | AxiosResponse
+) {
+  let url = isAxiosResponse(responseOrRequest) ? responseOrRequest.config.url : responseOrRequest.url;
+  if (url && (<any>transformerConfiguration.matcher).test(url)) {
+    return applyMorphism(transformerConfiguration, responseOrRequest);
+  }
+  return responseOrRequest;
+}
+function applyStringMatcher(
+  baseURL: string,
+  transformerConfiguration: InterceptorConfiguration,
+  responseOrRequest: AxiosRequestConfig | AxiosResponse
+) {
+  const finalPath = urljoin(baseURL, <string>transformerConfiguration.matcher);
+  const regExp = pathToRegexp(finalPath);
+  const url = isAxiosResponse(responseOrRequest) ? responseOrRequest.config.url : responseOrRequest.url;
+  if (url && regExp.test(url)) {
+    return applyMorphism(transformerConfiguration, responseOrRequest);
+  }
+  return responseOrRequest;
 }
 
-function createAxiosRequestCallback(callback: (request: AxiosRequestConfig) => AxiosRequestConfig) {
-  return (request: AxiosRequestConfig) => callback(request);
-}
-
-function createTransformer(baseUrl: string, transformerConfiguration: ResponseTransformerConfiguration) {
+function createResponseTransformer(baseUrl: string, transformerConfiguration: ResponseTransformerConfiguration) {
   const matcher = transformerConfiguration.matcher;
   if (isFunctionMatcher(matcher)) {
-    return createAxiosResponseCallback(response => {
-      const hasMatched = matcher(response);
-      if (hasMatched) {
-        return applyMorphism(transformerConfiguration, response);
-      }
-      return response;
-    });
+    return createAxiosResponseCallback(response => applyFunctionMatcher(transformerConfiguration, response));
   } else if (isRegExpMatcher(matcher)) {
-    return createAxiosResponseCallback(response => {
-      const url = response.config.url;
-      if (url && matcher.test(url)) {
-        return applyMorphism(transformerConfiguration, response);
-      }
-      return response;
-    });
+    return createAxiosResponseCallback(response => applyRegExpMatcher(transformerConfiguration, response));
   } else if (isStringMatcher(matcher)) {
-    const finalPath = urljoin(baseUrl, matcher);
-    const regExp = pathToRegexp(finalPath);
-    return createAxiosResponseCallback(response => {
-      const url = response.config.url;
-      if (url && regExp.test(url)) {
-        return applyMorphism(transformerConfiguration, response);
-      }
-      return response;
-    });
+    return createAxiosResponseCallback(response => applyStringMatcher(baseUrl, transformerConfiguration, response));
   }
 }
 
 function createRequestTransformer(baseUrl: string, transformerConfiguration: RequestTransformerConfiguration) {
-  const matcher = transformerConfiguration.matcher;
+  const { matcher } = transformerConfiguration;
   if (isFunctionMatcher(matcher)) {
-    return createAxiosRequestCallback(request => {
-      const hasMatched = matcher(request);
-      if (hasMatched) {
-        return applyMorphism(transformerConfiguration, request);
-      }
-      return request;
-    });
+    return createAxiosRequestCallback(request => applyFunctionMatcher(transformerConfiguration, request));
   } else if (isRegExpMatcher(matcher)) {
-    return createAxiosRequestCallback(request => {
-      const url = request.url;
-      if (url && matcher.test(url)) {
-        return applyMorphism(transformerConfiguration, request);
-      }
-      return request;
-    });
+    return createAxiosRequestCallback(request => applyRegExpMatcher(transformerConfiguration, request));
   } else if (isStringMatcher(matcher)) {
-    const finalPath = urljoin(baseUrl, matcher);
-    const regExp = pathToRegexp(finalPath);
-    return createAxiosRequestCallback(request => {
-      const url = request.url;
-      if (url && regExp.test(url)) {
-        return applyMorphism(transformerConfiguration, request);
-      }
-      return request;
-    });
+    return createAxiosRequestCallback(request => applyStringMatcher(baseUrl, transformerConfiguration, request));
   }
 }
 function createResponseInterceptor(baseUrl: string, transformerConfiguration: ResponseTransformerConfiguration) {
-  const transformer = createTransformer(baseUrl, transformerConfiguration);
+  const transformer = createResponseTransformer(baseUrl, transformerConfiguration);
   return createAxiosResponseCallback(response => {
     if (transformer) {
       return transformer(response);
@@ -175,14 +173,24 @@ export function apply(client: AxiosInstance, ...configurations: AxiosMorphismCon
   return client;
 }
 
-// Helpers
+export function combine(baseURL: string, ...configurations: AxiosMorphismConfiguration[]) {
+  const initialValue: AxiosMorphismConfiguration = { url: baseURL, interceptors: { requests: [], responses: [] } };
+  return configurations.reduce((rootConfiguration, configuration) => {
+    const configurationsMatcherString = configuration.interceptors.responses
+      .filter(c => isStringMatcher(c.matcher))
+      .map(config => ({ ...config, matcher: urljoin(configuration.url, (<string>config.matcher).replace(/\/$/, '')) }));
 
-function isFunctionMatcher(matcher: Matcher): matcher is ResponseFunctionMatcher | RequestFunctionMatcher {
-  return matcher instanceof Function;
-}
-function isRegExpMatcher(matcher: Matcher): matcher is RegExp {
-  return matcher instanceof RegExp;
-}
-function isStringMatcher(matcher: Matcher): matcher is string {
-  return typeof matcher === 'string';
+    const configurationsMatcherFunction = configuration.interceptors.responses.filter(c =>
+      isFunctionMatcher(c.matcher)
+    );
+
+    const configurationsRegExpMatcher = configuration.interceptors.responses.filter(c => isRegExpMatcher(c.matcher));
+
+    rootConfiguration.interceptors.responses.push(
+      ...configurationsMatcherFunction,
+      ...configurationsMatcherString,
+      ...configurationsRegExpMatcher
+    );
+    return rootConfiguration;
+  }, initialValue);
 }
