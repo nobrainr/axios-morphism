@@ -40,51 +40,55 @@ export function combine(baseURL: string, ...configurations: AxiosMorphismConfigu
   }, initialValue);
 }
 
-function createResponseInterceptor(baseUrl: string, matcherConfiguration: ResponseMatcher) {
-  return (response: AxiosResponse) => {
-    if (typeof matcherConfiguration.matcher === 'string') {
-      const finalPath = urljoin(baseUrl, <string>matcherConfiguration.matcher);
-      const regExp = pathToRegexp(finalPath);
-      const url = response.config.url;
+function applyMorphism(matcherConfiguration: ResponseMatcher, response: AxiosResponse) {
+  const { schema, dataSelector } = matcherConfiguration;
+  if (dataSelector) {
+    const data = response.data[dataSelector];
+    response.data[dataSelector] = morphism(schema, data);
+  } else {
+    response.data = morphism(schema, response.data);
+  }
+  return response;
+}
 
-      if (regExp.test(url)) {
-        const { schema, dataSelector } = matcherConfiguration;
-        if (dataSelector) {
-          const data = response.data[matcherConfiguration.dataSelector];
-          response.data[matcherConfiguration.dataSelector] = morphism(schema, data);
-        } else {
-          response.data = morphism(schema, response.data);
-        }
-      }
-      return response;
-    }
-    if (matcherConfiguration.matcher instanceof Function) {
-      const hasMatched = matcherConfiguration.matcher(response);
+function createTransformer(baseUrl: string, matcherConfiguration: ResponseMatcher) {
+  if (matcherConfiguration.matcher instanceof Function) {
+    const matcherFunction = matcherConfiguration.matcher;
+    return (response: AxiosResponse) => {
+      const hasMatched = matcherFunction(response);
       if (hasMatched) {
-        const { schema, dataSelector } = matcherConfiguration;
-        if (dataSelector) {
-          const data = response.data[matcherConfiguration.dataSelector];
-          response.data[matcherConfiguration.dataSelector] = morphism(schema, data);
-        } else {
-          response.data = morphism(schema, response.data);
-        }
+        return applyMorphism(matcherConfiguration, response);
       }
       return response;
-    }
-    if (matcherConfiguration.matcher instanceof RegExp) {
+    };
+  } else if (typeof matcherConfiguration.matcher === 'string') {
+    const finalPath = urljoin(baseUrl, <string>matcherConfiguration.matcher);
+    const regExp = pathToRegexp(finalPath);
+    return (response: AxiosResponse) => {
       const url = response.config.url;
-
-      if (matcherConfiguration.matcher.test(url)) {
-        const { schema, dataSelector } = matcherConfiguration;
-        if (dataSelector) {
-          const data = response.data[matcherConfiguration.dataSelector];
-          response.data[matcherConfiguration.dataSelector] = morphism(schema, data);
-        } else {
-          response.data = morphism(schema, response.data);
-        }
+      if (url && regExp.test(url)) {
+        return applyMorphism(matcherConfiguration, response);
       }
       return response;
+    };
+  } else if (matcherConfiguration.matcher instanceof RegExp) {
+    const matcherRegExp = matcherConfiguration.matcher;
+    return (response: AxiosResponse) => {
+      const url = response.config.url;
+      if (url && matcherRegExp.test(url)) {
+        return applyMorphism(matcherConfiguration, response);
+      }
+      return response;
+    };
+  }
+}
+function createResponseInterceptor(baseUrl: string, matcherConfiguration: ResponseMatcher) {
+  const transformer = createTransformer(baseUrl, matcherConfiguration);
+  return (response: AxiosResponse) => {
+    if (transformer) {
+      return transformer(response);
     }
+    return response;
   };
 }
 
