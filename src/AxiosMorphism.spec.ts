@@ -1,5 +1,5 @@
 import { combine, AxiosMorphismConfiguration, apply } from './AxiosMorphism';
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import { StrictSchema } from 'morphism';
 
@@ -132,6 +132,34 @@ describe('Axios Morphism', () => {
       afterEach(() => {
         mock.reset();
       });
+
+      it('should apply request interceptors on string matcher', async () => {
+        // Mock
+        const onPostSpy = jasmine.createSpy(`Post on ${baseURL}/people/id}`);
+        mock.onPost(`${baseURL}/people/id`).reply(config => {
+          onPostSpy(JSON.parse(config.data));
+          return [200];
+        });
+        // Config
+        const expectedPerson = {
+          name: mockPeople.name
+        };
+        const peopleToApiSchema = {
+          name: 'name'
+        };
+
+        const config: AxiosMorphismConfiguration = {
+          url: baseURL,
+          interceptors: {
+            requests: [{ matcher: '/people/:id', schema: peopleToApiSchema }],
+            responses: []
+          }
+        };
+        apply(client, config);
+
+        await client.post(`${baseURL}/people/id`, mockPeople);
+        expect(onPostSpy).toHaveBeenCalledWith(expectedPerson);
+      });
       it('should apply response interceptors on flat urls (e.g /people, /planets) and use dataSelector when present to access axios data', async () => {
         const config: AxiosMorphismConfiguration = {
           url: baseURL,
@@ -240,6 +268,8 @@ describe('Axios Morphism', () => {
             case 'planets': {
               return [200, { Operation: 'planets', data: mockPlanet }];
             }
+            default:
+              return [200, {}];
           }
         });
       });
