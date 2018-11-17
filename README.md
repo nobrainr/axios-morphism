@@ -1,7 +1,7 @@
 # axios-morphism
 [![npm](https://img.shields.io/npm/v/axios-morphism.svg?style=for-the-badge)](https://www.npmjs.com/package/axios-morphism) [![npm bundle size (minified)](https://img.shields.io/bundlephobia/min/axios-morphism.svg?style=for-the-badge)](https://github.com/nobrainr/axios-morphism) [![Coveralls github](https://img.shields.io/coveralls/github/nobrainr/axios-morphism.svg?style=for-the-badge)](https://coveralls.io/github/nobrainr/axios-morphism?branch=master) [![CircleCI (all branches)](https://img.shields.io/circleci/project/github/nobrainr/axios-morphism/master.svg?style=for-the-badge)](https://circleci.com/gh/nobrainr/axios-morphism) [![Deps](https://img.shields.io/david/nobrainr/axios-morphism.svg?style=for-the-badge)](https://www.npmjs.com/package/axios-morphism)
 
-> An Axios plugin to transform requests and response data on-the-fly based on a schema.
+> Axios plugin to transform data requests/responses based on a schema.
 
 This package is built upon [`Morphism`](https://www.npmjs.com/package/morphism). Read the documentation [here](https://github.com/nobrainr/morphism).
 
