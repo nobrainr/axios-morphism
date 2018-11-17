@@ -42,13 +42,15 @@ jobs:
             - v1-dependencies-{{ checksum "package.json" }}
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
-            - coverage-info
       - run:
           name: Build
           command: npm run build:prod
       - run:
           name: Publish Package
           command: cd dist && npm run semantic-release
+      - restore_cache:
+          keys:
+            - coverage-info
       - run:
           name: Publish Coverage
           command: npm run coveralls
