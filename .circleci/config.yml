@@ -25,6 +25,11 @@ jobs:
       - run:
           name: Run Tests
           command: npm test
+      # Save Coverage info for later publish
+      - save_cache:
+          paths:
+            - tests/coverage/lcov.info
+          key: coverage-info
 
   publish-job:
     docker:

@@ -22,7 +22,8 @@
     "server:prod": "cross-env NODE_ENV=production webpack-dev-server  --mode production --config ./webpack.config.js --port 3000 --host 0.0.0.0 --hot --inline --progress  --watch --open --content-base dist/",
     "start": "npm run server:dev",
     "test": "karma start",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "coveralls": "cat ./tests/coverage/lcov.info | coveralls"
   },
   "dependencies": {
     "morphism": "^1.6.1",
@@ -40,6 +41,7 @@
     "awesome-typescript-loader": "^5.2.0",
     "axios": "^0.18.0",
     "axios-mock-adapter": "^1.15.0",
+    "coveralls": "^3.0.2",
     "cross-env": "^5.0.1",
     "css-loader": "^1.0.0",
     "ejs-loader": "^0.3.0",
