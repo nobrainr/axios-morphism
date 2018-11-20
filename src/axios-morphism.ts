@@ -48,14 +48,14 @@ function isAxiosResponse(requestOrResponse: AxiosRequestConfig | AxiosResponse):
 }
 
 const axiosTypeSymbol = Symbol('AxiosType');
-function createAxiosResponseCallback(callback: (response: AxiosResponse) => AxiosResponse) {
+function createResponseCallback(callback: (response: AxiosResponse) => AxiosResponse) {
   return (response: AxiosResponse) => {
     response[axiosTypeSymbol] = AxiosType.AxiosResponse;
     return callback(response);
   };
 }
 
-function createAxiosRequestCallback(callback: (request: AxiosRequestConfig) => AxiosRequestConfig) {
+function createRequestCallback(callback: (request: AxiosRequestConfig) => AxiosRequestConfig) {
   return (request: AxiosRequestConfig) => {
     request[axiosTypeSymbol] = AxiosType.AxiosRequest;
     return callback(request);
@@ -110,27 +110,27 @@ function applyStringMatcher(
 function createResponseTransformer(baseUrl: string, transformerConfiguration: ResponseTransformerConfiguration) {
   const matcher = transformerConfiguration.matcher;
   if (isFunctionMatcher(matcher)) {
-    return createAxiosResponseCallback(response => applyFunctionMatcher(transformerConfiguration, response));
+    return createResponseCallback(response => applyFunctionMatcher(transformerConfiguration, response));
   } else if (isRegExpMatcher(matcher)) {
-    return createAxiosResponseCallback(response => applyRegExpMatcher(transformerConfiguration, response));
+    return createResponseCallback(response => applyRegExpMatcher(transformerConfiguration, response));
   } else if (isStringMatcher(matcher)) {
-    return createAxiosResponseCallback(response => applyStringMatcher(baseUrl, transformerConfiguration, response));
+    return createResponseCallback(response => applyStringMatcher(baseUrl, transformerConfiguration, response));
   }
 }
 
 function createRequestTransformer(baseUrl: string, transformerConfiguration: RequestTransformerConfiguration) {
   const { matcher } = transformerConfiguration;
   if (isFunctionMatcher(matcher)) {
-    return createAxiosRequestCallback(request => applyFunctionMatcher(transformerConfiguration, request));
+    return createRequestCallback(request => applyFunctionMatcher(transformerConfiguration, request));
   } else if (isRegExpMatcher(matcher)) {
-    return createAxiosRequestCallback(request => applyRegExpMatcher(transformerConfiguration, request));
+    return createRequestCallback(request => applyRegExpMatcher(transformerConfiguration, request));
   } else if (isStringMatcher(matcher)) {
-    return createAxiosRequestCallback(request => applyStringMatcher(baseUrl, transformerConfiguration, request));
+    return createRequestCallback(request => applyStringMatcher(baseUrl, transformerConfiguration, request));
   }
 }
 function createResponseInterceptor(baseUrl: string, transformerConfiguration: ResponseTransformerConfiguration) {
   const transformer = createResponseTransformer(baseUrl, transformerConfiguration);
-  return createAxiosResponseCallback(response => {
+  return createResponseCallback(response => {
     if (transformer) {
       return transformer(response);
     }
