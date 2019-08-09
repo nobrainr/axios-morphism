@@ -39,7 +39,7 @@
     "@types/node": "^10.12.6",
     "@types/url-join": "^0.8.2",
     "awesome-typescript-loader": "^5.2.0",
-    "axios": "^0.18.0",
+    "axios": "^0.18.1",
     "axios-mock-adapter": "^1.15.0",
     "coveralls": "^3.0.2",
     "cross-env": "^5.0.1",
