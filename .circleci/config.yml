@@ -28,27 +28,11 @@ jobs:
       - run:
           name: Build Tests Types
           command: npm run test:types
-      - run:
-          name: Display coverage
-          command: cat ./coverage/lcov.info
       # Save Coverage info for later publish
       - save_cache:
           paths:
             - ./coverage/lcov.info
           key: coverage-infos-{{ checksum "src/axios-morphism.ts" }}
-
-  dummy-job:
-    docker:
-      - image: circleci/node:9
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - coverage-infos-{{ checksum "src/axios-morphism.ts" }}
-      - run:
-          name: Display coverage
-          command: cat ./coverage/lcov.info
 
   publish-job:
     docker:
@@ -79,9 +63,6 @@ workflows:
   test:
     jobs:
       - test-job
-      - dummy-job:
-          requires:
-            - test-job
       - publish-job:
           requires:
             - test-job
