@@ -8,7 +8,7 @@
   },
   "version": "1.0.7",
   "main": "./dist/axios-morphism.js",
-  "types": "./dist/axios-morphism.d.ts",
+  "types": "./dist/types/axios-morphism.d.ts",
   "files": [
     "dist"
   ],
