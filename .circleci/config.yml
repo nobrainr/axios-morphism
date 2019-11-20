@@ -34,8 +34,21 @@ jobs:
       # Save Coverage info for later publish
       - save_cache:
           paths:
-            - coverage/lcov.info
-          key: coverage-info-{{ checksum "coverage/lcov.info" }}
+            - ./coverage/lcov.info
+          key: coverage-infos-{{ checksum "coverage/lcov.info" }}
+
+  dummy-job:
+    docker:
+      - image: circleci/node:9
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - coverage-infos-{{ checksum "coverage/lcov.info" }}
+      - run:
+          name: Display coverage
+          command: cat ./coverage/lcov.info
 
   publish-job:
     docker:
@@ -56,7 +69,7 @@ jobs:
           command: cd dist && npm run semantic-release
       - restore_cache:
           keys:
-            - coverage-info-{{ checksum "coverage/lcov.info" }}
+            - coverage-infos-{{ checksum "coverage/lcov.info" }}
       - run:
           name: Publish Coverage
           command: npm run coveralls
@@ -66,6 +79,9 @@ workflows:
   test:
     jobs:
       - test-job
+      - dummy-job:
+          requires:
+            - test-job
       - publish-job:
           requires:
             - test-job
