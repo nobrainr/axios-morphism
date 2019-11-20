@@ -1,7 +1,7 @@
 import { combine, AxiosMorphismConfiguration, apply } from './axios-morphism';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import { StrictSchema } from 'morphism';
+import { StrictSchema, createSchema } from 'morphism';
 
 interface People {
   name: string;
@@ -152,6 +152,40 @@ describe('Axios Morphism', () => {
           url: baseURL,
           interceptors: {
             requests: [{ matcher: '/people/:id', schema: peopleToApiSchema }],
+            responses: []
+          }
+        };
+        apply(client, config);
+
+        await client.post(`${baseURL}/people/id`, mockPeople);
+        expect(onPostSpy).toHaveBeenCalledWith(expectedPerson);
+      });
+
+      it('should allow a nested schema using createSchema', async () => {
+        // Mock
+        const onPostSpy = jasmine.createSpy(`Post on ${baseURL}/people/id}`);
+        mock.onPost(`${baseURL}/people/id`).reply(config => {
+          onPostSpy(JSON.parse(config.data));
+          return [200];
+        });
+        // Config
+        const expectedPerson = {
+          pedigree: {
+            skin: mockPeople.skin_color,
+            hair: mockPeople.hair_color
+          }
+        };
+        const schema = createSchema({
+          pedigree: {
+            skin: 'skin_color',
+            hair: 'hair_color'
+          }
+        });
+
+        const config: AxiosMorphismConfiguration = {
+          url: baseURL,
+          interceptors: {
+            requests: [{ matcher: '/people/:id', schema }],
             responses: []
           }
         };
