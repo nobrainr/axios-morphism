@@ -22,6 +22,9 @@ const plugins = [
 var config = {
   devtool: isProd ? 'hidden-source-map' : 'source-map',
   context: path.resolve('./src'),
+  externals: {
+    morphism: 'morphism'
+  },
   entry: {
     app: './axios-morphism.ts'
   },
