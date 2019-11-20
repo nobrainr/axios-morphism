@@ -28,6 +28,9 @@ jobs:
       - run:
           name: Build Tests Types
           command: npm run test:types
+      - run:
+          name: Display coverage
+          command: cat ./coverage/lcov.info
       # Save Coverage info for later publish
       - save_cache:
           paths:
