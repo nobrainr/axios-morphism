@@ -26,12 +26,12 @@
     "coveralls": "cat ./tests/coverage/lcov.info | coveralls"
   },
   "dependencies": {
-    "morphism": "^1.12.2",
     "path-to-regexp": "^5.0.0",
     "url-join": "^4.0.1"
   },
   "peerDependencies": {
-    "axios": "^0.19.0"
+    "axios": "^0.19.0",
+    "morphism": "^1.12.2"
   },
   "devDependencies": {
     "@semantic-release/git": "^7.0.18",
@@ -58,6 +58,7 @@
     "karma-sourcemap-loader": "^0.3.7",
     "karma-spec-reporter": "0.0.32",
     "karma-webpack": "^4.0.2",
+    "morphism": "^1.12.2",
     "rimraf": "^3.0.0",
     "semantic-release": "^15.13.31",
     "source-map-loader": "^0.2.4",
