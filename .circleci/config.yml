@@ -31,8 +31,8 @@ jobs:
       # Save Coverage info for later publish
       - save_cache:
           paths:
-            - coverage/lcov.info
-          key: coverage-info-{{ checksum "coverage/lcov.info" }}
+            - ./coverage/lcov.info
+          key: coverage-infos-{{ checksum "src/axios-morphism.ts" }}
 
   publish-job:
     docker:
@@ -53,7 +53,7 @@ jobs:
           command: cd dist && npm run semantic-release
       - restore_cache:
           keys:
-            - coverage-info-{{ checksum "coverage/lcov.info" }}
+            - coverage-infos-{{ checksum "src/axios-morphism.ts" }}
       - run:
           name: Publish Coverage
           command: npm run coveralls
