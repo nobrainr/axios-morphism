@@ -13,17 +13,17 @@
     "dist"
   ],
   "scripts": {
-    "build": "npm run build:prod",
-    "build:dev": "webpack --mode development --config ./webpack.config.js --progress --color --display-error-details",
-    "build:prod": "cross-env NODE_ENV=production webpack --mode production --config ./webpack.config.js  --progress  --color --display-error-details --bail",
-    "clean": "npm cache clear && rimraf -- dist",
-    "server": "npm run server:dev",
-    "server:dev": "webpack-dev-server --mode development --config ./webpack.config.js --hot --inline --progress --watch --open",
-    "server:prod": "cross-env NODE_ENV=production webpack-dev-server  --mode production --config ./webpack.config.js --port 3000 --host 0.0.0.0 --hot --inline --progress  --watch --open --content-base dist/",
-    "start": "npm run server:dev",
-    "test": "karma start",
+    "build": "run-p build:js build:types",
+    "start": "run-p watch:*",
+    "build:js": "TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --mode=production",
+    "watch:js": "npm run build:js -- -w --display \"errors-only\"",
+    "build:types": "tsc -p tsconfig.prod.json --emitDeclarationOnly",
+    "watch:types": "npm run build:types -- -w >/dev/null",
+    "test": "jest",
+    "test:types": "tsc --emitDeclarationOnly",
+    "test:coverage": "npm run test -- --coverage",
     "semantic-release": "semantic-release",
-    "coveralls": "cat ./tests/coverage/lcov.info | coveralls"
+    "coveralls": "cat ./coverage/lcov.info | coveralls"
   },
   "dependencies": {
     "path-to-regexp": "^5.0.0",
