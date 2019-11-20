@@ -1,7 +1,7 @@
 import { morphism, Schema, StrictSchema } from 'morphism';
 import { AxiosResponse, AxiosInstance, AxiosRequestConfig } from 'axios';
-import * as urljoin from 'url-join';
-import * as pathToRegexp from 'path-to-regexp';
+import urljoin from 'url-join';
+import { pathToRegexp } from 'path-to-regexp';
 
 type ResponseFunctionMatcher = (response: AxiosResponse) => boolean;
 type RequestFunctionMatcher = (request: AxiosRequestConfig) => boolean;
@@ -43,20 +43,20 @@ enum AxiosType {
   AxiosResponse = 'AxiosReponse',
   AxiosRequest = 'AxiosRequest'
 }
-function isAxiosResponse(requestOrResponse: AxiosRequestConfig | AxiosResponse): requestOrResponse is AxiosResponse {
+function isAxiosResponse(requestOrResponse: any): requestOrResponse is AxiosResponse {
   return requestOrResponse[axiosTypeSymbol] === AxiosType.AxiosResponse;
 }
 
 const axiosTypeSymbol = Symbol('AxiosType');
 function createAxiosResponseCallback(callback: (response: AxiosResponse) => AxiosResponse) {
-  return (response: AxiosResponse) => {
+  return (response: AxiosResponse & { [axiosTypeSymbol]?: AxiosType }) => {
     response[axiosTypeSymbol] = AxiosType.AxiosResponse;
     return callback(response);
   };
 }
 
 function createAxiosRequestCallback(callback: (request: AxiosRequestConfig) => AxiosRequestConfig) {
-  return (request: AxiosRequestConfig) => {
+  return (request: AxiosRequestConfig & { [axiosTypeSymbol]?: AxiosType }) => {
     request[axiosTypeSymbol] = AxiosType.AxiosRequest;
     return callback(request);
   };
@@ -73,20 +73,14 @@ function applyMorphism(transformerConfiguration: InterceptorConfiguration, axios
   return axiosInput;
 }
 
-function applyFunctionMatcher(
-  transformerConfiguration: InterceptorConfiguration,
-  responseOrRequest: AxiosRequestConfig | AxiosResponse
-) {
+function applyFunctionMatcher(transformerConfiguration: InterceptorConfiguration, responseOrRequest: AxiosRequestConfig | AxiosResponse) {
   const hasMatched = (<any>transformerConfiguration.matcher)(responseOrRequest);
   if (hasMatched) {
     return applyMorphism(transformerConfiguration, responseOrRequest);
   }
   return responseOrRequest;
 }
-function applyRegExpMatcher(
-  transformerConfiguration: InterceptorConfiguration,
-  responseOrRequest: AxiosRequestConfig | AxiosResponse
-) {
+function applyRegExpMatcher(transformerConfiguration: InterceptorConfiguration, responseOrRequest: AxiosRequestConfig | AxiosResponse) {
   let url = isAxiosResponse(responseOrRequest) ? responseOrRequest.config.url : responseOrRequest.url;
   if (url && (<any>transformerConfiguration.matcher).test(url)) {
     return applyMorphism(transformerConfiguration, responseOrRequest);
@@ -151,12 +145,8 @@ function createRequestInterceptor(baseUrl: string, transformerConfiguration: Req
 function createInterceptors(configuration: AxiosMorphismConfiguration) {
   const { url } = configuration;
   const { requests, responses } = configuration.interceptors;
-  const responseInterceptors = responses.map(transformerConfiguration =>
-    createResponseInterceptor(url, transformerConfiguration)
-  );
-  const requestInterceptors = requests.map(transformerConfiguration =>
-    createRequestInterceptor(url, transformerConfiguration)
-  );
+  const responseInterceptors = responses.map(transformerConfiguration => createResponseInterceptor(url, transformerConfiguration));
+  const requestInterceptors = requests.map(transformerConfiguration => createRequestInterceptor(url, transformerConfiguration));
   return { responses: responseInterceptors, requests: requestInterceptors };
 }
 
@@ -188,9 +178,7 @@ export function combine(baseURL: string, ...configurations: AxiosMorphismConfigu
       .filter(c => isStringMatcher(c.matcher))
       .map(config => ({ ...config, matcher: urljoin(configuration.url, (<string>config.matcher).replace(/\/$/, '')) }));
 
-    const configurationsMatcherFunction = configuration.interceptors.responses.filter(c =>
-      isFunctionMatcher(c.matcher)
-    );
+    const configurationsMatcherFunction = configuration.interceptors.responses.filter(c => isFunctionMatcher(c.matcher));
 
     const configurationsRegExpMatcher = configuration.interceptors.responses.filter(c => isRegExpMatcher(c.matcher));
 
