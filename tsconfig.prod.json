@@ -18,5 +18,5 @@
     "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["dist"]
+  "exclude": ["dist", "**/*/*.spec.ts"]
 }
