@@ -1,4 +1,5 @@
 # axios-morphism
+
 [![npm](https://img.shields.io/npm/v/axios-morphism.svg?style=for-the-badge)](https://www.npmjs.com/package/axios-morphism) [![npm bundle size (minified)](https://img.shields.io/bundlephobia/min/axios-morphism.svg?style=for-the-badge)](https://github.com/nobrainr/axios-morphism) [![Coveralls github](https://img.shields.io/coveralls/github/nobrainr/axios-morphism.svg?style=for-the-badge)](https://coveralls.io/github/nobrainr/axios-morphism?branch=master) [![CircleCI (all branches)](https://img.shields.io/circleci/project/github/nobrainr/axios-morphism/master.svg?style=for-the-badge)](https://circleci.com/gh/nobrainr/axios-morphism) [![Deps](https://img.shields.io/david/nobrainr/axios-morphism.svg?style=for-the-badge)](https://www.npmjs.com/package/axios-morphism) [![Greenkeeper badge](https://badges.greenkeeper.io/nobrainr/axios-morphism.svg)](https://greenkeeper.io/)
 
 > Axios plugin to transform data requests/responses based on a schema.
@@ -26,7 +27,7 @@ This package is built upon [`Morphism`](https://www.npmjs.com/package/morphism).
 ### Installation
 
 ```sh
-npm install --save axios # Axios is defined as a PeerDependency in axios-morphism
+npm install --save axios morphism # Axios and Morphism are defined as a peer dependencies in axios-morphism
 npm install --save axios-morphism
 ```
 
@@ -77,7 +78,6 @@ await client.get('/people');
 
 ▶ [Try on Repl.it](https://repl.it/@yrnd1/axios-morphism-simple)
 
-
 ## Usage
 
 ### Schema
@@ -108,7 +108,7 @@ const configuration: AxiosMorphismConfiguration = {
       { matcher: '/people', schema: peopleSchema, dataSelector: 'results' },
       { matcher: /\/people\/([^\/]+?)(?:\/)?$/i, schema: peopleSchema }, // matches /people/:id
       {
-        matcher: (response: AxiosResponse) => response.config.method === 'POST',  // matches every responses obtained using a POST
+        matcher: (response: AxiosResponse) => response.config.method === 'POST', // matches every responses obtained using a POST
         schema: peopleSchema,
         dataSelector: 'results'
       }
@@ -128,8 +128,6 @@ const configuration: AxiosMorphismConfiguration = {
 | interceptors.requests[].matcher                                            | `string` `RegExp` `Function`      | Matcher used to detect on which request to apply the transformer                    | - `'planets/:id'` <br> - `/planets$/i` <br> - `(request: AxiosRequestConfig) => request.url.includes('planets')` |
 | interceptors.requests[].schema interceptors.responses[].schema             | `Schema` `StrictSchema`           | A schema is an object-preserving map from one data structure to another.            | [Morphism Schema Examples](https://github.com/nobrainr/morphism#schema-example)                                  |
 | interceptors.requests[].dataSelector interceptors.responses[].dataSelector | `string`                          | A selector to access the data in the Axios returned data                            | With this Axios Response: `{ data: { results: [] }}`. Pick the data with `{ dataSelector: 'results' }`           |
-
-
 
 ### Apply Configurations
 
@@ -158,6 +156,7 @@ await client.get('/people/1');
 ```
 
 ### Remove Configurations
+
 Use the `unsubscribe` method returned from the `apply` function to opt-out from the interceptors
 
 ```typescript
